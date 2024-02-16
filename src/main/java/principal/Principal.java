@@ -100,7 +100,7 @@ public class Principal {
 			List<Poblaciones> listaPoblaciones = hibernateObtenerPoblaciones();
 
 			for (Poblaciones poblacion : listaPoblaciones) {
-				mongoComprobarOCrearPoblacion(poblacion);
+				mongoComprobarOCrearPoblacionConObjetoEmbebido(poblacion);
 			}
 
 		}
@@ -449,7 +449,7 @@ public class Principal {
 		}
 	}
 
-	public void mongoComprobarOCrearPoblacionConIdNumerico(Poblaciones poblacion) {
+	public static void mongoComprobarOCrearPoblacionConIdNumerico(Poblaciones poblacion) {
 
 		MongoCollection<Document> poblacionesCollection = database.getCollection("poblaciones");
 		MongoCollection<Document> capitalesCollection = database.getCollection("capitales");
@@ -475,7 +475,7 @@ public class Principal {
 		mongoClient.close();
 	}
 
-	public void mongoComprobarOCrearPoblacionConObjetoEmbebido(Poblaciones poblacion) {
+	public static void mongoComprobarOCrearPoblacionConObjetoEmbebido(Poblaciones poblacion) {
 		MongoCollection<Document> poblacionesCollection = database.getCollection("poblaciones");
 		MongoCollection<Document> capitalesCollection = database.getCollection("capitales");
 
