@@ -51,6 +51,8 @@ public class Principal {
 
 		metodoAglutinador(nombreCapital);
 
+		// migrarMongoDB(nombreCapital);// ESTE ES EL QUE HACE CHATGPT
+
 		sc.close();
 		mongoCerrarConexion(); // Cerrar conexion MongoDB
 		sesion.close(); // Cerrar conexion Hibernate
@@ -274,7 +276,6 @@ public class Principal {
 		return listaDocumentos;
 	}
 
-	
 	public static boolean mongoComprobarOCrearCapital(Capitales capital) {
 
 		MongoCollection<Document> capitalesCollection = database.getCollection("capitales");
@@ -284,8 +285,7 @@ public class Principal {
 		if (capitalExistente != null) {
 			System.out.println("La capital '" + capital.getNombre() + "' ya existe en MongoDB.");
 			return true;
-		}
-		else {
+		} else {
 			Document nuevaCapital = new Document().append("nombre", capital.getNombre());
 
 			capitalesCollection.insertOne(nuevaCapital);
@@ -327,8 +327,8 @@ public class Principal {
 			}
 
 			Document nuevaPoblacion = new Document().append("nombre", poblacion.getNombre())
-					.append("poblacion", poblacion.getCodPoblacion())
-					.append("capital", capitalId); 
+					.append("poblacion", poblacion.getHabitantes())
+					.append("capital", capitalId);
 
 			poblacionesCollection.insertOne(nuevaPoblacion);
 			System.out.println("La población '" + poblacion.getNombre() + "' ha sido creada en MongoDB.");
@@ -352,7 +352,7 @@ public class Principal {
 
 			Document nuevaPoblacion = new Document().append("nombre", poblacion.getNombre())
 					.append("poblacion", poblacion.getCodPoblacion())
-					.append("capital", capitalId); 
+					.append("capital", capitalId);
 			poblacionesCollection.insertOne(nuevaPoblacion);
 		}
 
@@ -371,7 +371,7 @@ public class Principal {
 
 			Document nuevaPoblacion = new Document().append("nombre", poblacion.getNombre())
 					.append("poblacion", poblacion.getCodPoblacion())
-					.append("capital", capitalMongoDB); 
+					.append("capital", capitalMongoDB);
 
 			poblacionesCollection.insertOne(nuevaPoblacion);
 		}
@@ -400,6 +400,108 @@ public class Principal {
 		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
 		Document nuevaProvincia = new Document("nombre", nombre);
 		provinciasCollection.insertOne(nuevaProvincia);
+	}
+
+	// ------------------------------------------------------------
+	// ------------------- CHATGPT MOMENTO ------------------------
+	// ------------------------------------------------------------
+
+	public static void migrarMongoDB(String nombreCapital) {
+		Capitales capitalAInsertar = new Capitales();
+		capitalAInsertar.setNombre(nombreCapital);
+
+		// Si la capital no existe en MySQL, la insertamos
+		if (!hibernateExisteCapital(nombreCapital)) {
+			if (hibernateInsertarCapital(capitalAInsertar)) {
+				System.out.println("La capital '" + nombreCapital + "' se ha insertado en MySQL");
+			} else {
+				System.out.println("Ha habido un problema al insertar '" + nombreCapital + "' en MySQL");
+				return;
+			}
+		}
+
+		// Si la capital no existe en MongoDB, la insertamos
+		if (!mongoComprobarOCrearCapital(capitalAInsertar)) {
+			System.out.println("La capital '" + nombreCapital + "' ha sido creada en MongoDB");
+		} else {
+			System.out.println("La capital '" + nombreCapital + "' ya existe en MongoDB");
+		}
+
+		// Si la capital existe en MySQL, obtenemos sus poblaciones
+		List<Poblaciones> listaPoblaciones = hibernateObtenerPoblaciones();
+		for (Poblaciones poblacion : listaPoblaciones) {
+			// Comprobamos la existencia de cada población en MongoDB
+			mongoComprobarOCrearPoblacion(poblacion);
+		}
+
+		// Si la capital existe en MongoDB, obtenemos sus poblaciones
+		List<Document> poblacionesMongoDB = mongoObtenerPoblaciones();
+		for (Document poblacionMongoDB : poblacionesMongoDB) {
+			// Comprobamos la existencia de cada población en MySQL
+			String nombrePoblacion = poblacionMongoDB.getString("nombre");
+			Poblaciones poblacionMySQL = hibernateLeerPoblacion(nombrePoblacion);
+			if (poblacionMySQL == null) {
+				// Si la población no existe en MySQL, la creamos
+				Poblaciones nuevaPoblacion = new Poblaciones();
+				nuevaPoblacion.setNombre(nombrePoblacion);
+				nuevaPoblacion.setHabitantes(poblacionMongoDB.getInteger("poblacion"));
+				// Obtenemos la capital correspondiente y la asignamos a la población
+				String nombreCapitalMongoDB = poblacionMongoDB.getString("capital");
+				Capitales capitalPoblacion = hibernateLeerCapital(nombreCapitalMongoDB);
+				nuevaPoblacion.setCapitales(capitalPoblacion);
+				hibernateInsertarPoblacion(nuevaPoblacion);
+				System.out.println("La población '" + nombrePoblacion + "' ha sido creada en MySQL");
+			} else {
+				// Si la población existe en MySQL, comprobamos su referencia a la capital
+				String nombreCapitalPoblacion = poblacionMySQL.getCapitales().getNombre();
+				if (!nombreCapitalPoblacion.equals(nombreCapital)) {
+					// Si la referencia a la capital no es la adecuada, la modificamos
+					poblacionMySQL.setCapitales(capitalAInsertar);
+					hibernateActualizarPoblacion(poblacionMySQL);
+					System.out.println(
+							"La referencia de la población '" + nombrePoblacion + "' ha sido corregida en MySQL");
+				}
+			}
+		}
+	}
+
+	public static Poblaciones hibernateLeerPoblacion(String nombrePoblacion) {
+		try {
+			sesion = sf.openSession();
+			Poblaciones poblacion = sesion.createQuery("FROM Poblaciones WHERE nombre = :nombre", Poblaciones.class)
+					.setParameter("nombre", nombrePoblacion)
+					.uniqueResult();
+			return poblacion;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static boolean hibernateInsertarPoblacion(Poblaciones poblacion) {
+		try {
+			sesion = sf.openSession();
+			Transaction tx = sesion.beginTransaction();
+			sesion.persist(poblacion);
+			tx.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public static boolean hibernateActualizarPoblacion(Poblaciones poblacion) {
+		try {
+			sesion = sf.openSession();
+			Transaction tx = sesion.beginTransaction();
+			sesion.merge(poblacion);
+			tx.commit();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 }
