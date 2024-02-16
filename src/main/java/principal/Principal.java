@@ -472,7 +472,6 @@ public class Principal {
 			poblacionesCollection.insertOne(nuevaPoblacion);
 		}
 
-		mongoClient.close();
 	}
 
 	public static void mongoComprobarOCrearPoblacionConObjetoEmbebido(Poblaciones poblacion) {
@@ -495,8 +494,6 @@ public class Principal {
 
 			poblacionesCollection.insertOne(nuevaPoblacion);
 		}
-
-		mongoClient.close();
 	}
 
 }
