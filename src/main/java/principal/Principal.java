@@ -100,7 +100,7 @@ public class Principal {
 			List<Poblaciones> listaPoblaciones = hibernateObtenerPoblaciones();
 
 			for (Poblaciones poblacion : listaPoblaciones) {
-				mongoComprobarOCrearPoblacionConObjetoEmbebido(poblacion);
+				mongoComprobarOCrearPoblacion(poblacion);
 			}
 
 		}
@@ -495,5 +495,41 @@ public class Principal {
 			poblacionesCollection.insertOne(nuevaPoblacion);
 		}
 	}
+
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------- CRUD MONGODB ---------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+	// ------------------------------------------------------------
+
+	// ------------------- Está hecho con pronvincias pero se puede cambiar a lo que haga falta ------------------
+	public Document leerProvincia(String nombre) {
+		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
+		Document provincia = provinciasCollection.find(Filters.eq("nombre", nombre)).first();
+		return provincia;
+	}
+
+	public void borrarProvincia(String nombre) {
+		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
+		provinciasCollection.deleteOne(Filters.eq("nombre", nombre));
+	}
+
+	public void modificarProvincia(String nombre, String nuevoNombre) {
+		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
+		provinciasCollection.updateOne(Filters.eq("nombre", nombre), Updates.set("nombre", nuevoNombre));
+	}
+
+	public void crearProvincia(String nombre) {
+		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
+		Document nuevaProvincia = new Document("nombre", nombre);
+		provinciasCollection.insertOne(nuevaProvincia);
+	}
+
 
 }
