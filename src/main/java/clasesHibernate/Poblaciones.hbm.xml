@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generated 16 feb 2024 10:46:20 by Hibernate Tools 6.3.1.Final --><!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class catalog="provincias" name="clasesHibernate.Poblaciones" optimistic-lock="none" table="poblaciones">
+        <id name="codPoblacion" type="java.lang.Integer">
+            <column name="cod_poblacion"/>
+            <generator class="identity"/>
+        </id>
+        <many-to-one class="clasesHibernate.Capitales" fetch="select" name="capitales">
+            <column name="capital" not-null="true"/>
+        </many-to-one>
+        <property name="nombre" type="string">
+            <column length="150" name="nombre"/>
+        </property>
+        <property name="habitantes" type="java.lang.Integer">
+            <column name="habitantes"/>
+        </property>
+    </class>
+</hibernate-mapping>
