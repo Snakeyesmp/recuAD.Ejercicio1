@@ -217,7 +217,6 @@ public class Principal {
 		Capitales capital = sesion.createQuery("FROM Capitales WHERE nombre = :nombre", Capitales.class)
 				.setParameter("nombre", nombreCapital)
 				.uniqueResult();
-		sesion.close();
 		return capital;
 	}
 
@@ -508,7 +507,8 @@ public class Principal {
 	// ------------------------------------------------------------
 	// ------------------------------------------------------------
 
-	// ------------------- Está hecho con pronvincias pero se puede cambiar a lo que haga falta ------------------
+	// ------------------- Está hecho con pronvincias pero se puede cambiar a lo que
+	// haga falta ------------------
 	public Document leerProvincia(String nombre) {
 		MongoCollection<Document> provinciasCollection = database.getCollection("provincias");
 		Document provincia = provinciasCollection.find(Filters.eq("nombre", nombre)).first();
@@ -530,6 +530,5 @@ public class Principal {
 		Document nuevaProvincia = new Document("nombre", nombre);
 		provinciasCollection.insertOne(nuevaProvincia);
 	}
-
 
 }
