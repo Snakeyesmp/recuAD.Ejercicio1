@@ -449,4 +449,54 @@ public class Principal {
 		}
 	}
 
+	public void mongoComprobarOCrearPoblacionConIdNumerico(Poblaciones poblacion) {
+
+		MongoCollection<Document> poblacionesCollection = database.getCollection("poblaciones");
+		MongoCollection<Document> capitalesCollection = database.getCollection("capitales");
+
+		// Buscar la población en MongoDB
+		Document poblacionMongoDB = poblacionesCollection
+				.find(Filters.eq("nombre", poblacion.getNombre())).first();
+
+		// Si la población no existe, crearla
+		if (poblacionMongoDB == null) {
+			// Buscar la capital en MongoDB y obtener su ID numérico
+			Document capitalMongoDB = capitalesCollection
+					.find(Filters.eq("nombre", poblacion.getCapitales().getNombre())).first();
+			int capitalId = capitalMongoDB.getInteger("id");
+
+			Document nuevaPoblacion = new Document().append("nombre", poblacion.getNombre())
+					.append("poblacion", poblacion.getCodPoblacion())
+					.append("capital", capitalId); // Usar el ID numérico de la capital
+
+			poblacionesCollection.insertOne(nuevaPoblacion);
+		}
+
+		mongoClient.close();
+	}
+
+	public void mongoComprobarOCrearPoblacionConObjetoEmbebido(Poblaciones poblacion) {
+		MongoCollection<Document> poblacionesCollection = database.getCollection("poblaciones");
+		MongoCollection<Document> capitalesCollection = database.getCollection("capitales");
+
+		// Buscar la población en MongoDB
+		Document poblacionMongoDB = poblacionesCollection
+				.find(Filters.eq("nombre", poblacion.getNombre())).first();
+
+		// Si la población no existe, crearla
+		if (poblacionMongoDB == null) {
+			// Buscar la capital en MongoDB
+			Document capitalMongoDB = capitalesCollection
+					.find(Filters.eq("nombre", poblacion.getCapitales().getNombre())).first();
+
+			Document nuevaPoblacion = new Document().append("nombre", poblacion.getNombre())
+					.append("poblacion", poblacion.getCodPoblacion())
+					.append("capital", capitalMongoDB); // Usar la capital como un subdocumento
+
+			poblacionesCollection.insertOne(nuevaPoblacion);
+		}
+
+		mongoClient.close();
+	}
+
 }
