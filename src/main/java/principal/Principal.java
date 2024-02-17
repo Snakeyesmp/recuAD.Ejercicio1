@@ -45,6 +45,8 @@ public class Principal {
 	public static void main(String[] args) {
 		mongoConectarOnline();
 
+		migrarDeMongoDBaMySQL();
+
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Introduce el nombre de la capital");
 		String nombreCapital = sc.nextLine();
@@ -502,6 +504,78 @@ public class Principal {
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	// MIGRAR DE MONGODB A MYSQL
+
+	public static void migrarDeMongoDBaMySQL() {
+		// Obtener todas las capitales de MongoDB
+		List<Document> capitalesMongoDB = mongoObtenerCapitales();
+
+		// Recorrer todas las capitales de MongoDB
+		for (Document capitalMongoDB : capitalesMongoDB) {
+			String nombreCapital = capitalMongoDB.getString("nombre");
+
+			// Verificar si la capital ya existe en MySQL
+			Capitales capitalMySQL = hibernateLeerCapital(nombreCapital);
+
+			// Si la capital no existe en MySQL, la insertamos
+			if (capitalMySQL == null) {
+				Capitales nuevaCapital = new Capitales();
+				nuevaCapital.setNombre(nombreCapital);
+
+				if (hibernateInsertarCapital(nuevaCapital)) {
+					System.out.println("La capital '" + nombreCapital + "' se ha insertado en MySQL");
+				} else {
+					System.out.println("Ha habido un problema al insertar '" + nombreCapital + "' en MySQL");
+				}
+
+				// Obtener el ID autoincremental de la capital insertada en MySQL
+				capitalMySQL = hibernateLeerCapital(nombreCapital);
+			}
+
+			// Obtener todas las poblaciones de la capital actual en MongoDB
+			List<Document> poblacionesMongoDB = mongoObtenerPoblacionesPorCapital(capitalMongoDB.getObjectId("_id"));
+
+			// Recorrer todas las poblaciones de la capital actual en MongoDB
+			for (Document poblacionMongoDB : poblacionesMongoDB) {
+				String nombrePoblacion = poblacionMongoDB.getString("nombre");
+
+				// Verificar si la población ya existe en MySQL
+				Poblaciones poblacionMySQL = hibernateLeerPoblacion(nombrePoblacion);
+
+				// Si la población no existe en MySQL, la insertamos
+				if (poblacionMySQL == null) {
+					Poblaciones nuevaPoblacion = new Poblaciones();
+					nuevaPoblacion.setNombre(nombrePoblacion);
+					nuevaPoblacion.setHabitantes(poblacionMongoDB.getInteger("poblacion"));
+					nuevaPoblacion.setCapitales(capitalMySQL);
+
+					if (hibernateInsertarPoblacion(nuevaPoblacion)) {
+						System.out.println("La población '" + nombrePoblacion + "' se ha insertado en MySQL");
+					} else {
+						System.out.println("Ha habido un problema al insertar '" + nombrePoblacion + "' en MySQL");
+					}
+				}
+			}
+		}
+	}
+	
+	public static List<Document> mongoObtenerPoblacionesPorCapital(ObjectId idCapital) {
+		ArrayList<Document> poblacionesPorCapital = new ArrayList<>();
+		
+		// Obtener todas las poblaciones de MongoDB
+		List<Document> poblacionesMongoDB = mongoObtenerPoblaciones();
+		
+		// Filtrar las poblaciones por la capital especificada
+		for (Document poblacion : poblacionesMongoDB) {
+			ObjectId capitalId = (ObjectId) poblacion.get("capital");
+			if (capitalId.equals(idCapital)) {
+				poblacionesPorCapital.add(poblacion);
+			}
+		}
+		
+		return poblacionesPorCapital;
 	}
 
 }
