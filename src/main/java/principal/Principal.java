@@ -548,7 +548,7 @@ public class Principal {
 				if (poblacionMySQL == null) {
 					Poblaciones nuevaPoblacion = new Poblaciones();
 					nuevaPoblacion.setNombre(nombrePoblacion);
-					nuevaPoblacion.setHabitantes(poblacionMongoDB.getInteger("poblacion"));
+					nuevaPoblacion.setHabitantes(poblacionMongoDB.getInteger("habitantes"));
 					nuevaPoblacion.setCapitales(capitalMySQL);
 
 					if (hibernateInsertarPoblacion(nuevaPoblacion)) {
