@@ -11,6 +11,7 @@ import javax.xml.xquery.XQMetaData;
 import javax.xml.xquery.XQResultSequence;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.xmldb.api.DatabaseManager;
@@ -27,6 +28,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 
 import net.xqj.exist.ExistXQDataSource;
 
@@ -233,17 +235,28 @@ public class ModeloXQJ {
             XQExpression expression = connection.createExpression();
 
             // Obtener la colección "poblaciones" de MongoDB
-            FindIterable<Document> poblacionesIt = db.getCollection("poblaciones").find();
+            MongoCollection<Document> poblacionesCollection = db.getCollection("poblaciones");
+            MongoCollection<Document> capitalesCollection = db.getCollection("capitales"); // Añadido
+            FindIterable<Document> poblacionesIt = poblacionesCollection.find();
             Iterator<Document> poblacionesIter = poblacionesIt.iterator();
 
             while (poblacionesIter.hasNext()) {
                 Document poblacionDoc = poblacionesIter.next();
                 String nombre = poblacionDoc.getString("nombre");
                 int poblacion = poblacionDoc.getInteger("poblacion");
-                String capitalId = poblacionDoc.getObjectId("capital").toString();
+                ObjectId capitalIdObj = poblacionDoc.getObjectId("capital"); // Obtener el ObjectId
+
+                // Obtener el nombre de la capital a partir del ObjectId
+                Document capitalDoc = capitalesCollection.find(Filters.eq("_id", capitalIdObj)).first(); // Modificado
+                String capitalNombre = capitalDoc != null ? capitalDoc.getString("nombre") : null;
+
+                // Imprimir los valores para depurar
+                System.out.println("Nombre: " + nombre);
+                System.out.println("Población: " + poblacion);
+                System.out.println("Nombre de la capital: " + capitalNombre);
 
                 // Verificar si los valores necesarios no son nulos
-                if (nombre != null && poblacion != 0 && capitalId != null) {
+                if (nombre != null && poblacion != 0 && capitalNombre != null) {
                     // Construir la expresión XQuery para insertar la población en eXistDB
                     String query = String.format(
                             "update insert "
@@ -252,7 +265,7 @@ public class ModeloXQJ {
                                     + "    <habitantes>%d</habitantes>"
                                     + "    <capital>%s</capital>"
                                     + "</poblacion> into doc(\"/db/provincias/localidades.xml\")/localidades",
-                            nombre, poblacion, capitalId);
+                            nombre, poblacion, capitalNombre);
 
                     // Ejecutar la expresión XQuery
                     expression.executeCommand(query);
