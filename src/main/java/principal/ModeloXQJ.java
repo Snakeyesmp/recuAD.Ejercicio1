@@ -8,7 +8,6 @@ import javax.xml.xquery.XQDataSource;
 import javax.xml.xquery.XQException;
 import javax.xml.xquery.XQExpression;
 import javax.xml.xquery.XQMetaData;
-import javax.xml.xquery.XQResultSequence;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -24,7 +23,6 @@ import org.xmldb.api.modules.XMLResource;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -82,7 +80,6 @@ public class ModeloXQJ {
                     "\nSoportar transacciones: " + xqmd.isTransactionSupported() +
                     "\nSoportar XQuery: " + xqmd.isXQueryXSupported());
         } catch (XQException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -209,25 +206,6 @@ public class ModeloXQJ {
         }
 
     }
-
-    public static void crearDocumento(String URICol, String docName, String contenidoDoc) {
-
-        try {
-            // con el metodo get con cogemos lacoleccion del padre
-            Collection coleccion = getCol(URICol);
-            XMLResource recurso = (XMLResource) coleccion.createResource(docName, XMLResource.RESOURCE_TYPE);
-            // rescribimos el contenido que queramos que tenga en su interior el archivo(que
-            // se ha pasado como parametro)
-            recurso.setContent(contenidoDoc);
-            // subimos el archivo con el contenido ya escrito a la bbdd
-            coleccion.storeResource(recurso);
-
-        } catch (XMLDBException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
     public static void exportarMongoDBToExistDB() {
         try {
             // Establecer conexión con eXistDB

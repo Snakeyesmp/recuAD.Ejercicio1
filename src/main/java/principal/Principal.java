@@ -54,16 +54,11 @@ public class Principal {
 
 		modeloXQJ.crearColeccion("db", "provincias"); // ESTO CREA CARPETA PROVINCIAS EN EXISTDB
 
-		//modeloXQJ.crearDocumento("db/provincias", "localidades", "");
+		modeloXQJ.crearDocumentoLocalidades(); // Crea el xml de las localidades
 
-		modeloXQJ.crearDocumentoLocalidades();
+		modeloXQJ.exportarMongoDBToExistDB(); // Pasa los datos de MongoDB y los mete en existDB
 
-		modeloXQJ.exportarMongoDBToExistDB();
-
-		//modeloXQJ.borrarColeccion("db", "provincias");
-		// ModeloXQJ.migrarDesdeMongoDB();
-
-		migrarDeMongoDBaMySQL();
+		migrarDeMongoDBaMySQL(); // Pasar datos de MongoDB a MySQL
 
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Introduce el nombre de la capital");
