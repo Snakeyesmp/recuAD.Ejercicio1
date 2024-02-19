@@ -43,7 +43,25 @@ public class Principal {
 	private static MongoClient mongoClient;
 
 	public static void main(String[] args) {
+
 		mongoConectarOnline();
+
+		// EXISTDB
+
+		ModeloXQJ modeloXQJ = new ModeloXQJ(database,mongoClient,sesion,sf);
+
+		// ModeloXQJ.probarConexion();
+
+		modeloXQJ.crearColeccion("db", "provincias"); // ESTO CREA CARPETA PROVINCIAS EN EXISTDB
+
+		//modeloXQJ.crearDocumento("db/provincias", "localidades", "");
+
+		modeloXQJ.crearDocumentoLocalidades();
+
+		modeloXQJ.exportarMongoDBToExistDB();
+
+		//modeloXQJ.borrarColeccion("db", "provincias");
+		// ModeloXQJ.migrarDesdeMongoDB();
 
 		migrarDeMongoDBaMySQL();
 
@@ -58,6 +76,7 @@ public class Principal {
 		sc.close();
 		mongoCerrarConexion(); // Cerrar conexion MongoDB
 		sesion.close(); // Cerrar conexion Hibernate
+		
 	}
 
 	// ------------------------------------------------------------
@@ -540,8 +559,7 @@ public class Principal {
 			// Recorrer todas las poblaciones de la capital actual en MongoDB
 			for (Document poblacionMongoDB : poblacionesMongoDB) {
 				String nombrePoblacion = poblacionMongoDB.getString("nombre");
-
-				// Verificar si la población ya existe en MySQL
+				
 				Poblaciones poblacionMySQL = hibernateLeerPoblacion(nombrePoblacion);
 
 				// Si la población no existe en MySQL, la insertamos
@@ -577,5 +595,14 @@ public class Principal {
 		
 		return poblacionesPorCapital;
 	}
+
+
+	// ------------------------------------------------------------
+	// ---------------------- EXISTDB -----------------------------
+	// ------------------------------------------------------------
+
+
+
+
 
 }
